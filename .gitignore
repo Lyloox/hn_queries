@@ -1,3 +1,7 @@
+hnStat
+*.txt
+*.swp
+
 # Prerequisites
 *.d
 
