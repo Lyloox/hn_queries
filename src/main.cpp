@@ -67,10 +67,36 @@ class BinaryTree {
         cout << log->first << "; " << log->second << endl;
       }
     }
+
+    void process(unsigned int ts_begin, unsigned int ts_end) {
+      auto lb = logs.lower_bound(ts_begin);
+      auto ub = logs.upper_bound(ts_end);
+      auto lower_ts = (lb != logs.end()) ? lb : logs.begin();
+      auto upper_ts = (ub != logs.end()) ? ub : logs.end();
+
+      unsigned int total_nb_queries = 0;
+      vector<string> total_queries(10);
+
+      for (; lower_ts != upper_ts; ++lower_ts) {
+        cout << lower_ts->first << "; " << lower_ts->second << endl;
+        total_nb_queries += lower_ts->second.nb_query;
+        total_queries.insert(total_queries.end(), 
+            lower_ts->second.queries.begin(), lower_ts->second.queries.end());
+      }
+
+      cout << "Total queries: " << total_nb_queries << endl;
+      cout << "List of queries: ";
+      for (vector<string>::iterator query = total_queries.begin(); 
+          query != total_queries.end(); ++query) {
+        cout << *query << " ";
+      }
+      cout << endl;
+    }
 };
 
 int main()
 {
+  // Preprocess
   ifstream logs_file("logs.txt");
   BinaryTree tree;
   if (logs_file.is_open()) {
@@ -85,6 +111,11 @@ int main()
     }
     logs_file.close();
   }
-  tree.print();
+
+  // Query!
+  unsigned int timestamp_begin = 4;
+  unsigned int timestamp_end = 5;
+  tree.process(timestamp_begin, timestamp_end);
+
   return 0;
 }
