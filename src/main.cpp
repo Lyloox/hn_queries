@@ -6,70 +6,90 @@
 #include <map>
 #include <set>
 #include <string>
+#include <algorithm>
+#include <limits>
 
-using namespace std;
+class InputParser{
+  public:
+    InputParser (int &argc, char **argv){
+      for (int i=1; i < argc; ++i)
+        this->tokens.push_back(std::string(argv[i]));
+    }
 
-int main()
+    unsigned int get_option(const std::string &option) const{
+      std::vector<std::string>::const_iterator itr;
+      itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
+      if (itr != this->tokens.end() && ++itr != this->tokens.end())
+        return std::stoul(*itr);
+      if (option == "--to")
+        return std::numeric_limits<unsigned int>::max();
+      return 0;
+    }
+
+  private:
+    std::vector <std::string> tokens;
+};
+
+int main(int argc, char *argv[])
 {
-  // TODO: Option parser
-  
-  unsigned int timestamp_begin = 1;
-  unsigned int timestamp_end = 6;
-  string command = "distinct";
-  string filepath = "logs.txt";
-  
+  if (argc - 1 == 0)
+    return 1;
 
-  map<string, unsigned int> logs;
-  set<string> distincts;
+  std::string command = argv[1];
+  std::string filepath = argv[argc - 1];
 
-  ifstream logs_file(filepath);
-  if (logs_file.is_open()) {
-    string line;
-    while (getline(logs_file, line)) {
-      istringstream iss(line);
+  InputParser input(argc, argv);
+  unsigned int from = input.get_option("--from");
+  unsigned int to = input.get_option("--to"); 
+
+  std::map<std::string, unsigned int> tops;
+  std::set<std::string> distincts;
+
+  std::ifstream file(filepath);
+  if (file.is_open()) {
+    std::string line;
+
+    while (getline(file, line)) {
+      std::istringstream iss(line);
       unsigned int key;
-      string value;
+      std::string value;
       iss >> key;
       iss >> value;
 
-      if (timestamp_end < key) {
-        cout << "Break bc end<key" << endl;
+      if (to < key)
         break;
-      }
-      if (timestamp_begin > key) {
-        cout << "Break bc end>key" << endl;
+
+      if (from > key)
         continue;
-      }
-      else {
-        cout << "Process: " << key << ", " << value << endl;
 
-        if (command == "top") {
-          auto previous_top = logs.find(value);
-          if (previous_top != logs.end()) {
-            cout << previous_top->second + 1 << endl;
-            logs.insert({value, previous_top->second + 1});
-          }
-          else
-            logs.insert({value, 1});
+      std::cout << "Process: " << key << ", " << value << std::endl;
+
+      if (command == "top") {
+        auto previous_top = tops.find(value);
+        if (previous_top != tops.end()) {
+          std::cout << previous_top->second + 1 << std::endl;
+          tops.insert({value, previous_top->second + 1});
         }
-
-        else if (command == "distinct")
-          distincts.insert(value);
+        else
+          tops.insert({value, 1});
       }
+
+      else if (command == "distinct")
+        distincts.insert(value);
 
     }
-    logs_file.close();
+    file.close();
   }
 
   if (command == "top") {
     // TODO: Sort
-    for (map<string, unsigned int>::iterator log = logs.begin();
-        log != logs.end(); ++log) {
-      cout << log->first << " " << log->second << endl;
+    for (std::map<std::string, unsigned int>::iterator log = tops.begin();
+        log != tops.end(); ++log) {
+      std::cout << log->first << " " << log->second << std::endl;
     }
   }
   else if (command == "distinct") {
-    cout << distincts.size() << endl;
+    std::cout << distincts.size() << std::endl;
   }
   return 0;
 }
