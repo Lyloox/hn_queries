@@ -4,7 +4,8 @@
 #include <vector>
 #include <iterator>
 #include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <algorithm>
 #include <limits>
@@ -16,20 +17,20 @@ class InputParser{
         this->tokens.push_back(std::string(argv[i]));
     }
 
-    unsigned int get_option(const std::string &option) const{
+    unsigned get_option(const std::string &option) const{
       std::vector<std::string>::const_iterator itr;
       itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
       if (itr != this->tokens.end() && ++itr != this->tokens.end())
         return std::stoul(*itr);
       if (option == "--to")
-        return std::numeric_limits<unsigned int>::max();
+        return std::numeric_limits<unsigned>::max();
       return 0;
     }
 
-    unsigned int char2uint(const char* nchar_value) const{
+    unsigned char2uint(const char* nchar_value) const{
       std::stringstream nss_value;
       nss_value << nchar_value;
-      unsigned int n;
+      unsigned n;
       nss_value >> n;
       return n;
     }
@@ -45,22 +46,22 @@ std::pair<B,A> flip_pair(const std::pair<A,B> &p)
 }
 
 template<typename A, typename B>
-std::multimap<B,A> flip_map(const std::map<A,B> &src)
+std::multimap<B,A> flip_map(const std::unordered_map<A,B> &src)
 {
   std::multimap<B,A> dst;
-  std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()), 
+  std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
       flip_pair<A,B>);
   return dst;
 }
 
 
-void print_result(std::string command, std::map<std::string, 
-    unsigned int> tops, std::set<std::string> distincts, unsigned int n) {
+void print_result(std::string command, std::unordered_map<std::string, 
+    unsigned> tops, std::unordered_set<std::string> distincts, unsigned n) {
   if (command == "top") {
-    std::multimap<unsigned int, std::string> sorted_tops = flip_map(tops);
-    std::multimap<unsigned int, std::string>::reverse_iterator sorted_top;
+    std::multimap<unsigned, std::string> sorted_tops = flip_map(tops);
+    std::multimap<unsigned, std::string>::reverse_iterator sorted_top;
    
-    unsigned int i = 0;
+    unsigned i = 0;
     for (sorted_top = sorted_tops.rbegin();
         sorted_top != sorted_tops.rend() && i < n;
         ++sorted_top) {
@@ -73,13 +74,14 @@ void print_result(std::string command, std::map<std::string,
   }
 }
 
-void parse(std::string& command, std::ifstream& file, std::map<std::string,
-  unsigned int>& tops, std::set<std::string>& distincts, unsigned int from,
-  unsigned int to) {
+void parse(std::string& command, std::ifstream& file, 
+    std::unordered_map<std::string, unsigned>& tops, 
+    std::unordered_set<std::string>& distincts, unsigned from,
+  unsigned to) {
   bool cmd_is_top = command == "top";
   bool cmd_is_distinct = command == "distinct";
   std::string line;
-  unsigned int key;
+  unsigned key;
   std::string value;
   while (getline(file, line)) {
     std::istringstream iss(line);
@@ -113,12 +115,12 @@ int main(int argc, char *argv[])
   std::string filepath = argv[argc - 1];
 
   InputParser input(argc, argv);
-  unsigned int n = input.char2uint(argv[2]);
-  unsigned int from = input.get_option("--from");
-  unsigned int to = input.get_option("--to"); 
+  unsigned n = input.char2uint(argv[2]);
+  unsigned from = input.get_option("--from");
+  unsigned to = input.get_option("--to"); 
 
-  std::map<std::string, unsigned int> tops;
-  std::set<std::string> distincts;
+  std::unordered_map<std::string, unsigned> tops;
+  std::unordered_set<std::string> distincts;
 
   std::ifstream file(filepath);
 
